@@ -109,8 +109,8 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 bg-blue-950/98 backdrop-blur-lg">
-          <nav className="px-4 py-6 space-y-6">
+        <div className="z-50 md:hidden fixed inset-0 top-16 bg-blue-950 backdrop-blur-lg">
+          <nav className="px-4 py-6 space-y-6 bg-blue-950 min-h-screen">
             {["Home", "Dashboard", "Upload", "Results"].map((item) => (
               <a
                 key={item}
