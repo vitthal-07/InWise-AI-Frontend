@@ -1,14 +1,14 @@
-import React, { useState } from "react";
 import {
-  Menu,
-  X,
-  Sun,
-  Moon,
-  User,
-  Settings,
-  LogOut,
   FileCheck,
+  LogOut,
+  Menu,
+  Moon,
+  Settings,
+  Sun,
+  User,
+  X,
 } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 interface HeaderProps {

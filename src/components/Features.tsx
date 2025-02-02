@@ -1,5 +1,4 @@
-import React from "react";
-import { Zap, Shield, Brain, Clock } from "lucide-react";
+import { Brain, Clock, Shield, Zap } from "lucide-react";
 
 const features = [
   {
