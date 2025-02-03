@@ -14,7 +14,7 @@ export function Layout() {
       <Header isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
 
       <div className="flex pt-16">
-        <main className={`flex-1 p-4 transition-all duration-300`}>
+        <main className={`flex-1 transition-all duration-300`}>
           <Outlet />
         </main>
       </div>

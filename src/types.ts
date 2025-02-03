@@ -1,22 +1,30 @@
 export interface Invoice {
   id: string;
-  amount: number;
+  amount?: number;
   date: string;
-  vendor: string;
+  vendor?: string;
   status: "matched" | "unmatched" | "pending";
-  confidence?: number;
 }
 
 export interface MatchResult {
+  id: string;
   dataset1Invoice: Invoice;
   dataset2Invoice: Invoice;
   confidence: number;
-  status: "matched" | "unmatched" | "pending";
+  status: "success" | "partial" | "failed";
+  matchDate: string;
+  matchedBy: "auto" | "manual";
 }
 
-export interface UserStats {
-  totalMatched: number;
-  pendingReview: number;
-  accuracy: number;
-  feedbackGiven: number;
+export interface FilterState {
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  confidenceRange: {
+    min: number;
+    max: number;
+  };
+  status: string[];
+  searchTerm: string;
 }

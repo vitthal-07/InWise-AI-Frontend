@@ -1,12 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import "./index.css";
 import { Layout } from "./Layout/Layout";
-import HomePage from "./pages/HomePage";
-import { Upload } from "./pages/Upload";
-import { Results } from "./pages/Results";
 import Dashboard from "./pages/Dashboard";
+import HomePage from "./pages/HomePage";
+import { MatchPage } from "./pages/MatchPage";
+import { Upload } from "./pages/Upload";
 
 const router = createBrowserRouter([
   {
@@ -22,12 +22,12 @@ const router = createBrowserRouter([
         element: <Upload />,
       },
       {
-        path: "/results",
-        element: <Results />,
-      },
-      {
         path: "/dashboard",
         element: <Dashboard />,
+      },
+      {
+        path: "/results",
+        element: <MatchPage />,
       },
     ],
   },
