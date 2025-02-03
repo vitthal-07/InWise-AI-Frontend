@@ -7,7 +7,7 @@ export function Upload() {
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-4 px-6">
       <div className="flex flex-col md:flex-row gap-2">
         <FileUpload
           label="Upload Purchase Order Dataset"
