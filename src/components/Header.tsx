@@ -20,6 +20,10 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+  const handleMenuClose = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <header className="fixed w-full top-0 z-50 backdrop-blur-lg bg-blue-950/80 border-b border-blue-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,7 +43,7 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
             {["Home", "Dashboard", "Upload", "Results"].map((item) => (
               <Link
                 key={item}
-                to={`${item == "Home" ? "/" : `/${item.toLowerCase()}`}`}
+                to={`${item === "Home" ? "/" : `/${item.toLowerCase()}`}`}
                 className="text-blue-100 hover:text-white transition-colors duration-200 relative group"
               >
                 {item}
@@ -79,14 +83,14 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
                     { label: "Settings", icon: Settings },
                     { label: "Logout", icon: LogOut },
                   ].map(({ label, icon: Icon }) => (
-                    <a
+                    <Link
                       key={label}
-                      href="#"
+                      to={`/${label.toLowerCase()}`}
                       className="flex items-center px-4 py-2 text-sm text-blue-100 hover:bg-blue-800/50"
                     >
                       <Icon className="w-4 h-4 mr-2" />
                       {label}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -112,13 +116,14 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
         <div className="z-50 md:hidden fixed inset-0 top-16 bg-blue-950 backdrop-blur-lg">
           <nav className="px-4 py-6 space-y-6 bg-blue-950 min-h-screen">
             {["Home", "Dashboard", "Upload", "Results"].map((item) => (
-              <a
+              <Link
                 key={item}
-                href="#"
+                to={`${item === "Home" ? "/" : `/${item.toLowerCase()}`}`}
                 className="block text-lg text-blue-100 hover:text-white transition-colors duration-200"
+                onClick={handleMenuClose}
               >
                 {item}
-              </a>
+              </Link>
             ))}
             <hr className="border-blue-800/50" />
             <div className="space-y-6">
@@ -127,14 +132,15 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
                 { label: "Settings", icon: Settings },
                 { label: "Logout", icon: LogOut },
               ].map(({ label, icon: Icon }) => (
-                <a
+                <Link
                   key={label}
-                  href="#"
+                  to={`/${label.toLowerCase()}`}
                   className="flex items-center text-blue-100 hover:text-white"
+                  onClick={handleMenuClose}
                 >
                   <Icon className="w-5 h-5 mr-3" />
                   {label}
-                </a>
+                </Link>
               ))}
             </div>
           </nav>
