@@ -5,8 +5,9 @@ import "./index.css";
 import { Layout } from "./Layout/Layout";
 import Dashboard from "./pages/Dashboard";
 import HomePage from "./pages/HomePage";
-import { MatchPage } from "./pages/MatchPage";
+import { MatchFilesPage } from "./pages/MatchFilesPage";
 import { Upload } from "./pages/Upload";
+import { MatchPage } from "./pages/MatchPage";
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       },
       {
         path: "/results",
+        element: <MatchFilesPage />,
+      },
+      {
+        path: "/matches/:fileId",
         element: <MatchPage />,
       },
     ],

@@ -56,7 +56,7 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
           <div className="hidden md:flex items-center space-x-6">
             {/* Theme Toggle */}
             <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
+              onClick={() => setIsDarkMode(true)}
               className="p-2 rounded-lg hover:bg-blue-800/50 transition-colors duration-200"
             >
               {isDarkMode ? (

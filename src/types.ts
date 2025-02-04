@@ -1,8 +1,8 @@
 export interface Invoice {
   id: string;
-  amount?: number;
+  amount: number;
   date: string;
-  vendor?: string;
+  vendor: string;
   status: "matched" | "unmatched" | "pending";
 }
 
@@ -27,4 +27,15 @@ export interface FilterState {
   };
   status: string[];
   searchTerm: string;
+}
+
+export interface MatchFile {
+  id: string;
+  name: string;
+  uploadDate: string;
+  totalInvoices: number;
+  matchedCount: number;
+  unmatchedCount: number;
+  pendingCount: number;
+  averageConfidence: number;
 }

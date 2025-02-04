@@ -6,6 +6,30 @@ export function Upload() {
   const [poFile, setPoFile] = useState<File | null>(null);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
 
+  const handleFileUpload = async () => {
+    if (poFile && invoiceFile) {
+      const formData = new FormData();
+      formData.append("poFile", poFile);
+      formData.append("invoiceFile", invoiceFile);
+
+      try {
+        const response = await fetch("http://localhost:5000/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to upload files");
+        }
+
+        const result = await response.json();
+        console.log("Upload successful:", result);
+      } catch (error) {
+        console.error("Error uploading files:", error);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6 pt-4 px-6">
       <div className="flex flex-col md:flex-row gap-2">
@@ -23,7 +47,10 @@ export function Upload() {
 
       {poFile && invoiceFile && (
         <div className="flex justify-center">
-          <button className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition cursor-pointer">
+          <button
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition cursor-pointer"
+            onClick={handleFileUpload}
+          >
             Match Invoices
           </button>
         </div>
