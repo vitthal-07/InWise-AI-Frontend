@@ -1,13 +1,15 @@
 import { ChevronDown, ChevronUp, Download, ExternalLink } from "lucide-react";
-import { MatchResult } from "../types";
+import { MatchData } from "../types";
+import { useMatchContext } from "../context/MatchContext";
 
 interface MatchTableProps {
-  matches: MatchResult[];
+  matches: MatchData[];
   onSort: (field: string) => void;
   sortField: string;
   sortDirection: "asc" | "desc";
   onDownload: (invoiceId: string) => void;
-  onViewDetails: (match: MatchResult) => void;
+  onViewDetails: (match: MatchData) => void;
+  fileId?: string; // Optional: used to find a timestamp if available.
 }
 
 export function MatchTable({
@@ -17,9 +19,12 @@ export function MatchTable({
   sortDirection,
   onDownload,
   onViewDetails,
+  fileId,
 }: MatchTableProps) {
+  const { matches: contextMatches } = useMatchContext();
   const SortIcon = sortDirection === "asc" ? ChevronUp : ChevronDown;
 
+  // Renders a sort icon if the current column is sorted.
   const renderSortIcon = (field: string) => {
     if (sortField === field) {
       return <SortIcon className="w-4 h-4 ml-1" />;
@@ -27,23 +32,39 @@ export function MatchTable({
     return null;
   };
 
+  // Returns a background/text color based on status.
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "success":
+      case "exact":
         return "bg-green-500/10 text-green-500";
       case "partial":
         return "bg-yellow-500/10 text-yellow-500";
-      case "failed":
+      case "unmatched":
         return "bg-red-500/10 text-red-500";
       default:
         return "bg-gray-500/10 text-gray-500";
     }
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 90) return "text-green-500";
-    if (confidence >= 70) return "text-yellow-500";
-    return "text-red-500";
+  // Returns a text color based on the confidence score.
+  const getConfidenceColor = (status: string) => {
+    if (status === "exact") return "text-green-500";
+    if (status === "partial") return "text-yellow-500";
+    return "text-gray-500";
+  };
+
+  // If available, retrieve a timestamp from the context similar to how MatchCard does.
+  const getMatchDate = () => {
+    // If a fileId is provided and context has a timestamp property, display it.
+    if (fileId) {
+      const found = contextMatches.find((m) => m.id === fileId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (found && (found as any).time_stamp) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return new Date((found as any).time_stamp).toLocaleDateString();
+      }
+    }
+    return "N/A";
   };
 
   return (
@@ -53,11 +74,11 @@ export function MatchTable({
           <tr>
             <th
               className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-              onClick={() => onSort("id")}
+              onClick={() => onSort("match_id")}
             >
               <div className="flex items-center">
                 Match ID
-                {renderSortIcon("id")}
+                {renderSortIcon("match_id")}
               </div>
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -68,11 +89,11 @@ export function MatchTable({
             </th>
             <th
               className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-              onClick={() => onSort("confidence")}
+              onClick={() => onSort("confidence_score")}
             >
               <div className="flex items-center">
                 Confidence
-                {renderSortIcon("confidence")}
+                {renderSortIcon("confidence_score")}
               </div>
             </th>
             <th
@@ -84,14 +105,8 @@ export function MatchTable({
                 {renderSortIcon("status")}
               </div>
             </th>
-            <th
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-              onClick={() => onSort("matchDate")}
-            >
-              <div className="flex items-center">
-                Match Date
-                {renderSortIcon("matchDate")}
-              </div>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Match Date
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Actions
@@ -101,25 +116,23 @@ export function MatchTable({
         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
           {matches.map((match) => (
             <tr
-              key={match.id}
+              key={match.match_id}
               className="hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                #{match.id}
+                #{match.match_id}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {match.dataset1Invoice.id}
+                {match.invoice_1}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {match.dataset2Invoice.id}
+                {match.invoice_2}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <span
-                  className={`font-medium ${getConfidenceColor(
-                    match.confidence
-                  )}`}
+                  className={`font-medium ${getConfidenceColor(match.status)}`}
                 >
-                  {match.confidence}%
+                  {match.confidence_score.toFixed(2)}%
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
@@ -132,12 +145,12 @@ export function MatchTable({
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {new Date(match.matchDate).toLocaleDateString()}
+                {getMatchDate()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div className="flex space-x-3">
                   <button
-                    onClick={() => onDownload(match.dataset1Invoice.id)}
+                    onClick={() => onDownload(match.invoice_1)}
                     className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     <Download className="w-4 h-4" />

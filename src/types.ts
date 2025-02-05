@@ -1,19 +1,7 @@
-export interface Invoice {
-  id: string;
-  amount: number;
-  date: string;
-  vendor: string;
-  status: "matched" | "unmatched" | "pending";
-}
-
 export interface MatchResult {
   id: string;
-  dataset1Invoice: Invoice;
-  dataset2Invoice: Invoice;
-  confidence: number;
-  status: "success" | "partial" | "failed";
-  matchDate: string;
-  matchedBy: "auto" | "manual";
+  result_file: string;
+  time_stamp: string;
 }
 
 export interface FilterState {
@@ -25,17 +13,14 @@ export interface FilterState {
     min: number;
     max: number;
   };
-  status: string[];
+  status: ("exact" | "partial" | "unmatched")[];
   searchTerm: string;
 }
 
-export interface MatchFile {
-  id: string;
-  name: string;
-  uploadDate: string;
-  totalInvoices: number;
-  matchedCount: number;
-  unmatchedCount: number;
-  pendingCount: number;
-  averageConfidence: number;
+export interface MatchData {
+  match_id: number;
+  invoice_1: string;
+  invoice_2: string;
+  confidence_score: number;
+  status: "exact" | "partial" | "unmatched";
 }

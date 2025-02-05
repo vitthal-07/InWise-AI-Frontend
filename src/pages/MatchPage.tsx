@@ -1,99 +1,17 @@
 import { Filter as FilterIcon, Plus, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { DetailedMatchModal } from "../components/DetailedMatchModal";
-import { ExportCSV } from "../components/ExportCSV";
 import { FiltersSidebar } from "../components/FiltersSidebar";
-import { ManualMatch } from "../components/ManualMatch";
 import { MatchCard } from "../components/MatchCard";
 import { MatchTable } from "../components/MatchTable";
-import { FilterState, Invoice, MatchResult } from "../types";
-
-// Mock data for demonstration
-const mockMatches: MatchResult[] = [
-  {
-    id: "1",
-    dataset1Invoice: {
-      id: "INV-001",
-      amount: 1500.0,
-      date: "2024-03-15",
-      vendor: "Acme Corp",
-      status: "matched",
-    },
-    dataset2Invoice: {
-      id: "INV-A101",
-      amount: 1500.0,
-      date: "2024-03-15",
-      vendor: "Acme Corporation",
-      status: "matched",
-    },
-    confidence: 95,
-    status: "success",
-    matchDate: "2024-03-15T10:30:00Z",
-    matchedBy: "auto",
-  },
-  {
-    id: "2",
-    dataset1Invoice: {
-      id: "INV-002",
-      amount: 2750.5,
-      date: "2024-03-16",
-      vendor: "Tech Solutions",
-      status: "matched",
-    },
-    dataset2Invoice: {
-      id: "INV-TS01",
-      amount: 2750.5,
-      date: "2024-03-16",
-      vendor: "TechSolutions",
-      status: "matched",
-    },
-    confidence: 85,
-    status: "partial",
-    matchDate: "2024-03-16T12:45:00Z",
-    matchedBy: "auto",
-  },
-  {
-    id: "3",
-    dataset1Invoice: {
-      id: "INV-003",
-      amount: 500.0,
-      date: "2024-03-17",
-      vendor: "Global Services",
-      status: "matched",
-    },
-    dataset2Invoice: {
-      id: "INV-GS01",
-      amount: 500.0,
-      date: "2024-03-17",
-      vendor: "Global Services",
-      status: "matched",
-    },
-    confidence: 100,
-    status: "success",
-    matchDate: "2024-03-17T09:15:00Z",
-    matchedBy: "auto",
-  },
-  
-];
-
-const mockUnmatchedInvoices: Invoice[] = [
-  {
-    id: "INV-002",
-    amount: 2750.5,
-    date: "2024-03-16",
-    vendor: "Tech Solutions",
-    status: "unmatched",
-  },
-];
+import { FilterState, MatchData } from "../types";
+// import { useMatchContext } from "../context/MatchContext";
+import { ExportCSV } from "../components/ExportXLSX";
 
 export function MatchPage() {
-  const { fileId } = useParams();
+  const { matchId = "" } = useParams();
   const [view, setView] = useState<"grid" | "table">("table");
   const [filterSidebarOpen, setFilterSidebarOpen] = useState(false);
-  const [manualMatchOpen, setManualMatchOpen] = useState(false);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<MatchResult | null>(null);
   const [sortField, setSortField] = useState("matchDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
@@ -103,12 +21,40 @@ export function MatchPage() {
     status: [],
     searchTerm: "",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  // const { matches } = useMatchContext();
+  const [matchSet, setMatchSet] = useState<MatchData[]>([]);
 
-  // In a real application, you would fetch matches for the specific fileId
   useEffect(() => {
-    // Fetch matches for the specific fileId
-    console.log(`Fetching matches for file: ${fileId}`);
-  }, [fileId]);
+    const fetchMatchData = async () => {
+      try {
+        // const matchResult = matches.find((obj) => obj.id == matchId);
+        setLoading(true);
+        const entriesResponse = await fetch(
+          `http://localhost:5000/process_xlsx?page=${currentPage}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              cloudinary_url:
+                "https://res.cloudinary.com/despz51jw/raw/upload/v1738752177/Matching_Report_Final_3_gsmkgf.xlsx",
+            }),
+          }
+        );
+        if (!entriesResponse.ok) throw new Error("Failed to fetch entries");
+        const matchData: unknown = await entriesResponse.json();
+
+        setMatchSet((matchData as { data: MatchData[] }).data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        // Handle error (e.g., show error message to user)
+      }
+    };
+
+    fetchMatchData();
+  }, [currentPage]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -123,48 +69,27 @@ export function MatchPage() {
     console.log(`Downloading invoice: ${invoiceId}`);
   };
 
-  const handleManualMatch = (invoice1: Invoice, invoice2: Invoice) => {
-    console.log("Manual match:", { invoice1, invoice2 });
-    setManualMatchOpen(false);
-  };
+  // const handleManualMatch = (  invoice_1: string, invoice_2: string) => {
+  //   console.log("Manual match:", {   invoice_1, invoice_2 });
+  //   setManualMatchOpen(false);
+  // };
 
-  const handleViewDetails = (match: MatchResult) => {
-    setSelectedMatch(match);
-    setDetailsModalOpen(true);
-  };
-
-  const filteredMatches = mockMatches.filter((match) => {
+  const cloudinaryUrl =
+    "https://res.cloudinary.com/despz51jw/raw/upload/v1738747964/Matching_Report_Final_3_bsubsh.xlsx";
+  const filteredMatches = matchSet.filter((match) => {
     const matchesSearch =
       searchTerm === "" ||
-      match.dataset1Invoice.id
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      match.dataset2Invoice.id
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      match.dataset1Invoice?.vendor
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      match.dataset2Invoice?.vendor
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-    const matchesDateRange =
-      !filters.dateRange.start ||
-      !filters.dateRange.end ||
-      (new Date(match.matchDate) >= new Date(filters.dateRange.start) &&
-        new Date(match.matchDate) <= new Date(filters.dateRange.end));
+      match.invoice_1.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      match.invoice_2.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesConfidence =
-      match.confidence >= filters.confidenceRange.min &&
-      match.confidence <= filters.confidenceRange.max;
+      match.confidence_score >= filters.confidenceRange.min &&
+      match.confidence_score <= filters.confidenceRange.max;
 
     const matchesStatus =
       filters.status.length === 0 || filters.status.includes(match.status);
 
-    return (
-      matchesSearch && matchesDateRange && matchesConfidence && matchesStatus
-    );
+    return matchesSearch && matchesConfidence && matchesStatus;
   });
 
   return (
@@ -175,7 +100,7 @@ export function MatchPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
-              placeholder="Search matches..."
+              placeholder="Search invoices..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -192,16 +117,15 @@ export function MatchPage() {
             Filters
           </button>
           <button
-            onClick={() => setManualMatchOpen(true)}
+            // onClick={() => setManualMatchOpen(true)}
             className="inline-flex items-center cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Plus className="w-4 h-4 mr-2" />
             Manual Match
           </button>
-          <ExportCSV matches={filteredMatches} />
+          <ExportCSV cloudinaryUrl={cloudinaryUrl} />
         </div>
       </div>
-
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -236,10 +160,11 @@ export function MatchPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredMatches.map((match) => (
                 <MatchCard
-                  key={match.id}
+                  key={match.match_id}
+                  fileId={matchId}
                   match={match}
                   onDownload={handleDownload}
-                  onViewDetails={handleViewDetails}
+                  onViewDetails={() => {}}
                 />
               ))}
             </div>
@@ -250,32 +175,40 @@ export function MatchPage() {
               sortField={sortField}
               sortDirection={sortDirection}
               onDownload={handleDownload}
-              onViewDetails={handleViewDetails}
+              onViewDetails={() => {}}
             />
           )}
         </div>
       </div>
-
+      <div className="flex justify-center mt-6">
+        <button
+          disabled={currentPage === 1 || loading}
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          className="px-4 py-2 mx-1 bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="px-4 py-2 mx-1 text-gray-700">Page {currentPage}</span>
+        <button
+          disabled={loading}
+          onClick={() => setCurrentPage((prev) => prev + 1)}
+          className="px-4 py-2 mx-1 bg-gray-200 text-gray-700 rounded-lg"
+        >
+          Next
+        </button>
+      </div>
       <FiltersSidebar
         isOpen={filterSidebarOpen}
         onClose={() => setFilterSidebarOpen(false)}
         filters={filters}
         onFilterChange={setFilters}
       />
-
-      <ManualMatch
+      {/* <ManualMatch
         isOpen={manualMatchOpen}
         onClose={() => setManualMatchOpen(false)}
-        unmatchedInvoices={mockUnmatchedInvoices}
+        unmatchedInvoices={[]}
         onMatch={handleManualMatch}
-      />
-
-      <DetailedMatchModal
-        isOpen={detailsModalOpen}
-        onClose={() => setDetailsModalOpen(false)}
-        match={selectedMatch}
-        onDownload={handleDownload}
-      />
+      /> */}
     </div>
   );
 }

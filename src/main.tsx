@@ -31,7 +31,7 @@ const router = createBrowserRouter([
         element: <MatchFilesPage />,
       },
       {
-        path: "/matches/:fileId",
+        path: "/match/:matchId",
         element: <MatchPage />,
       },
     ],

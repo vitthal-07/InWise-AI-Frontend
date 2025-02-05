@@ -141,7 +141,7 @@ export function FiltersSidebar({
                 Status
               </h3>
               <div className="space-y-2">
-                {["success", "partial", "failed"].map((status) => (
+                {(["exact", "partial", "unmatched"] as const).map((status) => (
                   <label key={status} className="flex items-center">
                     <input
                       type="checkbox"

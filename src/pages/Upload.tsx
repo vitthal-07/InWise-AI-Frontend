@@ -1,10 +1,13 @@
 import { AlertCircle } from "lucide-react";
 import { FileUpload } from "../components/FileUpload";
 import { useState } from "react";
+import { useMatchContext } from "../context/MatchContext";
+import { MatchResult } from "../types";
 
 export function Upload() {
   const [poFile, setPoFile] = useState<File | null>(null);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
+  const { addMatch } = useMatchContext();
 
   const handleFileUpload = async () => {
     if (poFile && invoiceFile) {
@@ -18,12 +21,10 @@ export function Upload() {
           body: formData,
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to upload files");
-        }
+        if (!response.ok) throw new Error("Failed to upload files");
 
-        const result = await response.json();
-        console.log("Upload successful:", result);
+        const result: MatchResult = await response.json();
+        addMatch(result);
       } catch (error) {
         console.error("Error uploading files:", error);
       }
