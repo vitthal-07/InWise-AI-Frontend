@@ -10,6 +10,7 @@ export function Upload() {
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { addMatch } = useMatchContext();
+  const API_URL = import.meta.env.VITE_API_URL as string;
 
   const handleFileUpload = async () => {
     if (poFile && invoiceFile) {
@@ -20,7 +21,7 @@ export function Upload() {
       toast.info("Processing files. Please wait...");
 
       try {
-        const response = await fetch("http://localhost:5000/process", {
+        const response = await fetch(`${API_URL}/process`, {
           method: "POST",
           body: formData,
         });

@@ -31,41 +31,52 @@ export function MatchPage() {
   const [loading, setLoading] = useState(true);
   const { matches } = useMatchContext();
   const [matchSet, setMatchSet] = useState<MatchData[]>([]);
+  const API_URL = import.meta.env.VITE_API_URL as string;
 
+  // Retrieve the cloudinary URL from the match result context
   const matchResult: MatchResult | undefined = matches.find(
     (obj: MatchResult) => obj._id === matchId
   );
   const cloudinaryUrl = matchResult?.result_file;
 
+  // Debounced fetchMatchData function inside useEffect
   useEffect(() => {
     const fetchMatchData = async () => {
       try {
-        const matchResult = matches.find(
-          (obj: MatchResult) => obj._id === matchId
-        );
-        const cloudinaryUrl = matchResult?.result_file;
-
         if (!cloudinaryUrl) {
-          // Handle the case where the match isn't found, perhaps log or set an error state
           console.error("Match not found or missing Cloudinary URL");
           return;
         }
-
         setLoading(true);
-        const entriesResponse = await fetch(
-          `http://localhost:5000/process_xlsx?page=${currentPage}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              cloudinary_url: cloudinaryUrl,
-            }),
-          }
-        );
-        if (!entriesResponse.ok) throw new Error("Failed to fetch entries");
-        const matchData: unknown = await entriesResponse.json();
 
-        setMatchSet((matchData as { data: MatchData[] }).data);
+        // Build query parameters from filters and search term
+        const params = new URLSearchParams();
+        params.append("page", currentPage.toString());
+        if (filters.dateRange.start)
+          params.append("dateStart", filters.dateRange.start);
+        if (filters.dateRange.end)
+          params.append("dateEnd", filters.dateRange.end);
+        params.append("minConfidence", filters.confidenceRange.min.toString());
+        params.append("maxConfidence", filters.confidenceRange.max.toString());
+        if (filters.status.length > 0) {
+          params.append("status", filters.status.join(","));
+        }
+        if (searchTerm) {
+          params.append("searchTerm", searchTerm);
+        }
+
+        const url = `${API_URL}/process_xlsx?${params.toString()}`;
+
+        const entriesResponse = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cloudinary_url: cloudinaryUrl }),
+        });
+        if (!entriesResponse.ok) throw new Error("Failed to fetch entries");
+
+        const data = await entriesResponse.json();
+        // Assume the response has structure: { data: MatchData[] }
+        setMatchSet((data as { data: MatchData[] }).data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -73,10 +84,16 @@ export function MatchPage() {
       }
     };
 
-    if (matchId) {
-      fetchMatchData();
-    }
-  }, [currentPage, matchId, matches]);
+    // Debounce: Wait 500ms after the last change before calling fetchMatchData
+    const debounceTimer = setTimeout(() => {
+      if (matchId && cloudinaryUrl) {
+        fetchMatchData();
+      }
+    }, 500);
+
+    // Cleanup: Clear the timer if any dependency changes
+    return () => clearTimeout(debounceTimer);
+  }, [currentPage, matchId, cloudinaryUrl, filters, searchTerm]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -91,6 +108,7 @@ export function MatchPage() {
     console.log(`Downloading invoice: ${invoiceId}`);
   };
 
+  // Filter matches client-side (if needed)
   const filteredMatches = matchSet.filter((match) => {
     const matchesSearch =
       searchTerm === "" ||
@@ -112,7 +130,7 @@ export function MatchPage() {
   );
 
   const handleManualMatch = (invoice1: string, invoice2: string) => {
-    fetch("http://localhost:5000/manual_match", {
+    fetch(`${API_URL}/manual_match`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -144,6 +162,7 @@ export function MatchPage() {
 
   return (
     <div className="space-y-6 pt-3 px-6">
+      {/* Search and Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex-1 w-full sm:max-w-md">
           <div className="relative">
@@ -157,7 +176,6 @@ export function MatchPage() {
             />
           </div>
         </div>
-
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setFilterSidebarOpen(true)}
@@ -173,10 +191,11 @@ export function MatchPage() {
             <Plus className="w-4 h-4 mr-2" />
             Manual Match
           </button>
-          <ExportCSV cloudinaryUrl={cloudinaryUrl as string} />
+          <ExportCSV cloudinaryUrl={cloudinaryUrl || ""} />
         </div>
       </div>
 
+      {/* Match Results */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -206,7 +225,6 @@ export function MatchPage() {
               </button>
             </div>
           </div>
-
           {loading ? (
             <div className="flex justify-center items-center py-10">
               <Loader2 className="animate-spin h-10 w-10 text-blue-500" />
@@ -236,6 +254,7 @@ export function MatchPage() {
         </div>
       </div>
 
+      {/* Pagination */}
       <div className="flex justify-center mt-6">
         <button
           disabled={currentPage === 1 || loading}

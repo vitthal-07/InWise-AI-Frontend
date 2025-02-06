@@ -13,6 +13,7 @@ const MatchContext = createContext<MatchContextType | undefined>(undefined);
 export const MatchProvider = ({ children }: { children: React.ReactNode }) => {
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL as string;
 
   useEffect(() => {
     fetchMatches();
@@ -20,7 +21,7 @@ export const MatchProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchMatches = async () => {
     try {
-      const response = await fetch("http://localhost:5000/fetch_entries");
+      const response = await fetch(`${API_URL}/matches`);
       if (!response.ok) throw new Error("Failed to fetch matches");
       const data = await response.json();
 

@@ -34,7 +34,7 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
               <FileCheck className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-blue-300">
-              Smart Invoice Matcher
+              InWise AI
             </span>
           </div>
 

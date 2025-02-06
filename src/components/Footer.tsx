@@ -89,7 +89,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-blue-500/10 text-center text-blue-200">
-          <p>&copy; 2024 Invoice Matching Platform. All rights reserved.</p>
+          <p>&copy; 2025 InWise AI. All rights reserved.</p>
         </div>
       </div>
     </footer>

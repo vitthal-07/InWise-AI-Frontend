@@ -11,7 +11,7 @@ export function ExportCSV({ cloudinaryUrl }: ExportCSVProps) {
       className="inline-flex items-center cursor-pointer px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
     >
       <FileDown className="w-4 h-4 mr-2" />
-      Export CSV
+      Export as XLSX
     </a>
   );
 }
