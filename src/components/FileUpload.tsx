@@ -59,7 +59,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           <input
             type="file"
             className="hidden"
-            accept=".json,.csv"
+            accept=".xlsx,.csv"
             onChange={handleFileInput}
           />
         </label>

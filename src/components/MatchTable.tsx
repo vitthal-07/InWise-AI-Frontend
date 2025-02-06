@@ -57,14 +57,14 @@ export function MatchTable({
   const getMatchDate = () => {
     // If a fileId is provided and context has a timestamp property, display it.
     if (fileId) {
-      const found = contextMatches.find((m) => m.id === fileId);
+      const found = contextMatches.find((m) => m._id === fileId);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (found && (found as any).time_stamp) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return new Date((found as any).time_stamp).toLocaleDateString();
       }
     }
-    return "N/A";
+    return new Date().toLocaleDateString();
   };
 
   return (

@@ -16,6 +16,7 @@ export function MatchFilesPage() {
     navigate(`/match/${matchId}`);
   };
 
+  if (!matches) return <p>Loading...</p>;
   return (
     <div className="space-y-6 pt-3 px-6">
       {/* Search Bar */}
@@ -38,18 +39,15 @@ export function MatchFilesPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {matches.map((match) => (
           <div
-            key={match.id}
-            onClick={() => handleMatchClick(match.id)}
+            key={match._id}
+            onClick={() => handleMatchClick(match._id)}
             className="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <FileText className="w-6 h-6 text-blue-500" />
                 <h3 className="font-medium">
-                  {match.result_file.replace(
-                    "https://res.cloudinary.com/despz51jw/raw/upload/v1738737099/",
-                    ""
-                  )}
+                    {match?.result_file?.split("/").pop()}
                 </h3>
               </div>
               <p className="text-sm text-gray-400">

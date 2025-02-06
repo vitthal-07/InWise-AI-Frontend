@@ -1,17 +1,23 @@
-import { Filter as FilterIcon, Plus, Search } from "lucide-react";
+import { Filter as FilterIcon, Plus, Search, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { FiltersSidebar } from "../components/FiltersSidebar";
 import { MatchCard } from "../components/MatchCard";
 import { MatchTable } from "../components/MatchTable";
-import { FilterState, MatchData } from "../types";
-// import { useMatchContext } from "../context/MatchContext";
+import { FilterState, MatchData, MatchResult } from "../types";
+import { useMatchContext } from "../context/MatchContext";
 import { ExportCSV } from "../components/ExportXLSX";
+import { ManualMatch } from "../components/ManualMatch";
+import { DetailedMatchModal } from "../components/DetailedMatchModal";
+import { toast } from "react-toastify";
 
 export function MatchPage() {
   const { matchId = "" } = useParams();
   const [view, setView] = useState<"grid" | "table">("table");
   const [filterSidebarOpen, setFilterSidebarOpen] = useState(false);
+  const [manualMatchOpen, setManualMatchOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState<MatchData | null>(null);
   const [sortField, setSortField] = useState("matchDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,14 +28,29 @@ export function MatchPage() {
     searchTerm: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  // const { matches } = useMatchContext();
+  const [loading, setLoading] = useState(true);
+  const { matches } = useMatchContext();
   const [matchSet, setMatchSet] = useState<MatchData[]>([]);
+
+  const matchResult: MatchResult | undefined = matches.find(
+    (obj: MatchResult) => obj._id === matchId
+  );
+  const cloudinaryUrl = matchResult?.result_file;
 
   useEffect(() => {
     const fetchMatchData = async () => {
       try {
-        // const matchResult = matches.find((obj) => obj.id == matchId);
+        const matchResult = matches.find(
+          (obj: MatchResult) => obj._id === matchId
+        );
+        const cloudinaryUrl = matchResult?.result_file;
+
+        if (!cloudinaryUrl) {
+          // Handle the case where the match isn't found, perhaps log or set an error state
+          console.error("Match not found or missing Cloudinary URL");
+          return;
+        }
+
         setLoading(true);
         const entriesResponse = await fetch(
           `http://localhost:5000/process_xlsx?page=${currentPage}`,
@@ -37,8 +58,7 @@ export function MatchPage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              cloudinary_url:
-                "https://res.cloudinary.com/despz51jw/raw/upload/v1738752177/Matching_Report_Final_3_gsmkgf.xlsx",
+              cloudinary_url: cloudinaryUrl,
             }),
           }
         );
@@ -49,12 +69,14 @@ export function MatchPage() {
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
-        // Handle error (e.g., show error message to user)
+        setLoading(false);
       }
     };
 
-    fetchMatchData();
-  }, [currentPage]);
+    if (matchId) {
+      fetchMatchData();
+    }
+  }, [currentPage, matchId, matches]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -69,13 +91,6 @@ export function MatchPage() {
     console.log(`Downloading invoice: ${invoiceId}`);
   };
 
-  // const handleManualMatch = (  invoice_1: string, invoice_2: string) => {
-  //   console.log("Manual match:", {   invoice_1, invoice_2 });
-  //   setManualMatchOpen(false);
-  // };
-
-  const cloudinaryUrl =
-    "https://res.cloudinary.com/despz51jw/raw/upload/v1738747964/Matching_Report_Final_3_bsubsh.xlsx";
   const filteredMatches = matchSet.filter((match) => {
     const matchesSearch =
       searchTerm === "" ||
@@ -83,14 +98,49 @@ export function MatchPage() {
       match.invoice_2.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesConfidence =
-      match.confidence_score >= filters.confidenceRange.min &&
-      match.confidence_score <= filters.confidenceRange.max;
+      Number(match.confidence_score) >= filters.confidenceRange.min &&
+      Number(match.confidence_score) <= filters.confidenceRange.max;
 
     const matchesStatus =
       filters.status.length === 0 || filters.status.includes(match.status);
 
     return matchesSearch && matchesConfidence && matchesStatus;
   });
+
+  const unmatchedInvoices = matchSet.filter(
+    (match) => match.status === "unmatched"
+  );
+
+  const handleManualMatch = (invoice1: string, invoice2: string) => {
+    fetch("http://localhost:5000/manual_match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        invoice_1: invoice1,
+        invoice_2: invoice2,
+        cloudinary_url: cloudinaryUrl,
+        match_id: matchId,
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to perform manual match");
+        }
+        return response.json();
+      })
+      .then(() => {
+        toast.success("Manual match successful");
+      })
+      .catch(() => {
+        toast.error("Failed to perform manual match");
+      });
+    setManualMatchOpen(false);
+  };
+
+  const handleViewDetails = (match: MatchData) => {
+    setSelectedMatch(match);
+    setDetailsModalOpen(true);
+  };
 
   return (
     <div className="space-y-6 pt-3 px-6">
@@ -117,15 +167,16 @@ export function MatchPage() {
             Filters
           </button>
           <button
-            // onClick={() => setManualMatchOpen(true)}
+            onClick={() => setManualMatchOpen(true)}
             className="inline-flex items-center cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Plus className="w-4 h-4 mr-2" />
             Manual Match
           </button>
-          <ExportCSV cloudinaryUrl={cloudinaryUrl} />
+          <ExportCSV cloudinaryUrl={cloudinaryUrl as string} />
         </div>
       </div>
+
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -156,7 +207,11 @@ export function MatchPage() {
             </div>
           </div>
 
-          {view === "grid" ? (
+          {loading ? (
+            <div className="flex justify-center items-center py-10">
+              <Loader2 className="animate-spin h-10 w-10 text-blue-500" />
+            </div>
+          ) : view === "grid" ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredMatches.map((match) => (
                 <MatchCard
@@ -164,7 +219,7 @@ export function MatchPage() {
                   fileId={matchId}
                   match={match}
                   onDownload={handleDownload}
-                  onViewDetails={() => {}}
+                  onViewDetails={handleViewDetails}
                 />
               ))}
             </div>
@@ -175,11 +230,12 @@ export function MatchPage() {
               sortField={sortField}
               sortDirection={sortDirection}
               onDownload={handleDownload}
-              onViewDetails={() => {}}
+              onViewDetails={handleViewDetails}
             />
           )}
         </div>
       </div>
+
       <div className="flex justify-center mt-6">
         <button
           disabled={currentPage === 1 || loading}
@@ -197,18 +253,25 @@ export function MatchPage() {
           Next
         </button>
       </div>
+
       <FiltersSidebar
         isOpen={filterSidebarOpen}
         onClose={() => setFilterSidebarOpen(false)}
         filters={filters}
         onFilterChange={setFilters}
       />
-      {/* <ManualMatch
+      <ManualMatch
         isOpen={manualMatchOpen}
         onClose={() => setManualMatchOpen(false)}
-        unmatchedInvoices={[]}
+        unmatchedInvoices={unmatchedInvoices}
         onMatch={handleManualMatch}
-      /> */}
+      />
+      <DetailedMatchModal
+        isOpen={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        match={selectedMatch}
+        onDownload={handleDownload}
+      />
     </div>
   );
 }

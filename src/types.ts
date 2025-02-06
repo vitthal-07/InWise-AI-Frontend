@@ -1,5 +1,5 @@
 export interface MatchResult {
-  id: string;
+  _id: string;
   result_file: string;
   time_stamp: string;
 }
@@ -13,7 +13,7 @@ export interface FilterState {
     min: number;
     max: number;
   };
-  status: ("exact" | "partial" | "unmatched")[];
+  status: ("exact" | "partial" | "unmatched" | "manual")[];
   searchTerm: string;
 }
 
@@ -22,5 +22,5 @@ export interface MatchData {
   invoice_1: string;
   invoice_2: string;
   confidence_score: number;
-  status: "exact" | "partial" | "unmatched";
+  status: "exact" | "partial" | "unmatched" | "manual";
 }

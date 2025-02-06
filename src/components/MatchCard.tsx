@@ -21,7 +21,7 @@ export function MatchCard({
         return "bg-green-500/10 text-green-500";
       case "partial":
         return "bg-yellow-500/10 text-yellow-500";
-      case "failed":
+      case "unmatched":
         return "bg-red-500/10 text-red-500";
       default:
         return "bg-gray-500/10 text-gray-500";
@@ -36,7 +36,7 @@ export function MatchCard({
   };
 
   function obj(value: MatchResult): boolean {
-    return value.id === fileId;
+    return value._id === fileId;
   }
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
@@ -82,7 +82,7 @@ export function MatchCard({
               match.confidence_score
             )}`}
           >
-            {match.confidence_score}%
+            {match.confidence_score.toFixed(2)}%
           </span>
         </div>
         <div className="flex justify-between items-center">

@@ -27,7 +27,7 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
-        path: "/results",
+        path: "/matches",
         element: <MatchFilesPage />,
       },
       {

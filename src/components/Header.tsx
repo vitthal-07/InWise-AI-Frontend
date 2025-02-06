@@ -40,7 +40,7 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {["Home", "Dashboard", "Upload", "Results"].map((item) => (
+            {["Home", "Dashboard", "Upload", "Matches"].map((item) => (
               <Link
                 key={item}
                 to={`${item === "Home" ? "/" : `/${item.toLowerCase()}`}`}
@@ -115,7 +115,7 @@ export function Header({ isDarkMode, setIsDarkMode }: HeaderProps) {
       {isMenuOpen && (
         <div className="z-50 md:hidden fixed inset-0 top-16 bg-blue-950 backdrop-blur-lg">
           <nav className="px-4 py-6 space-y-6 bg-blue-950 min-h-screen">
-            {["Home", "Dashboard", "Upload", "Results"].map((item) => (
+            {["Home", "Dashboard", "Upload", "Matches"].map((item) => (
               <Link
                 key={item}
                 to={`${item === "Home" ? "/" : `/${item.toLowerCase()}`}`}

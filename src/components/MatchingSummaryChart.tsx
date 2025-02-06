@@ -3,8 +3,8 @@ import { BarChart as ChartDot, PieChart } from 'lucide-react';
 export const MatchingSummaryChart = () => {
   const stats = {
     matched: 75,
-    mismatched: 15,
-    pending: 10
+    partial: 15,
+    unmatched: 10
   };
 
   return (
